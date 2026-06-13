@@ -7,6 +7,7 @@ const downloadHtml = document.querySelector("#downloadHtml");
 const materials = document.querySelector("#materials");
 const materialFolder = document.querySelector("#materialFolder");
 const uploadSummary = document.querySelector("#uploadSummary");
+const generateButton = document.querySelector(".primary-action");
 
 let latestReportHtml = "";
 let latestReportData = null;
@@ -197,20 +198,30 @@ loadSample.addEventListener("click", () => {
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (isReadingMaterials) {
-    renderUploadSummary("材料仍在读取中，请稍等...");
-    return;
-  }
+  try {
+    if (isReadingMaterials) {
+      syncUploadedTextsFromRecords();
+      renderUploadSummary("材料仍在读取中，已先基于当前已完成内容生成报告...");
+    }
 
-  const data = collectFormData();
-  const analysis = analyze(data);
-  latestReportData = data;
-  latestAnalysis = analysis;
-  latestReportHtml = renderReport(data, analysis);
-  preview.innerHTML = latestReportHtml;
-  renderSignals(analysis);
-  updateMetrics(analysis);
-  document.querySelector("#reportTitle").textContent = `${data.customerName}业务需求分析报告`;
+    const data = collectFormData();
+    const analysis = analyze(data);
+    latestReportData = data;
+    latestAnalysis = analysis;
+    latestReportHtml = renderReport(data, analysis);
+    preview.innerHTML = latestReportHtml;
+    renderSignals(analysis);
+    updateMetrics(analysis);
+    document.querySelector("#reportTitle").textContent = `${data.customerName}业务需求分析报告`;
+    preview.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (error) {
+    preview.innerHTML = `
+      <div class="empty-state">
+        <h3>生成报告时遇到问题</h3>
+        <p>${escapeHtml(error.message || String(error))}</p>
+      </div>
+    `;
+  }
 });
 
 copyHtml.addEventListener("click", async () => {
@@ -996,21 +1007,51 @@ async function readSelectedMaterials() {
   uploadStats = buildUploadStats(uploadedFiles);
   isReadingMaterials = true;
   renderUploadSummary("正在读取材料内容...");
+  updateGenerateButtonState();
 
-  for (let index = 0; index < files.length; index += 1) {
-    const file = files[index];
-    const record = materialRecords[index];
-    if (!isParseCandidate(file.name)) continue;
-    record.status = "解析中";
-    renderUploadSummary(`正在读取 ${index + 1}/${files.length}：${record.path}`);
-    await readMaterialFile(file, record);
+  try {
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index];
+      const record = materialRecords[index];
+      if (!isParseCandidate(file.name)) continue;
+      record.status = "解析中";
+      renderUploadSummary(`正在读取 ${index + 1}/${files.length}：${record.path}`);
+      await withTimeout(readMaterialFile(file, record), 30000, `${record.path} 解析超时，已先纳入材料清单`);
+    }
+  } catch (error) {
+    const current = materialRecords.find((record) => record.status === "解析中");
+    if (current) {
+      current.status = "解析失败";
+      current.error = error.message || String(error);
+    }
+  } finally {
+    syncUploadedTextsFromRecords();
+    uploadStats.parsed = materialRecords.filter((record) => record.status === "已解析").length;
+    uploadedNames = uploadedFiles.map((file) => file.path);
+    isReadingMaterials = false;
+    updateGenerateButtonState();
+    renderUploadSummary();
   }
+}
 
+function syncUploadedTextsFromRecords() {
   uploadedTexts = materialRecords.filter((record) => record.text).map((record) => formatMaterialText(record.path, record.text));
-  uploadStats.parsed = materialRecords.filter((record) => record.status === "已解析").length;
   uploadedNames = uploadedFiles.map((file) => file.path);
-  isReadingMaterials = false;
-  renderUploadSummary();
+}
+
+function updateGenerateButtonState() {
+  if (!generateButton) return;
+  generateButton.classList.toggle("is-reading", isReadingMaterials);
+  generateButton.title = isReadingMaterials ? "材料仍在读取中，可先生成当前已完成内容的报告" : "生成分析报告";
+}
+
+function withTimeout(promise, timeoutMs, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      window.setTimeout(() => reject(new Error(message)), timeoutMs);
+    }),
+  ]);
 }
 
 function dedupeFiles(files) {
@@ -1089,12 +1130,16 @@ async function readPdf(file, record) {
   const pdf = await task.promise;
   record.meta.pages = pdf.numPages;
   const pages = [];
+  const pageLimit = Math.min(pdf.numPages, 30);
 
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+  for (let pageNumber = 1; pageNumber <= pageLimit; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
     const text = content.items.map((item) => item.str).join(" ");
     pages.push(`【第${pageNumber}页】\n${text}`);
+  }
+  if (pdf.numPages > pageLimit) {
+    pages.push(`【系统提示】PDF共${pdf.numPages}页，本次优先抽取前${pageLimit}页用于快速分析。`);
   }
 
   return pages.join("\n\n");
