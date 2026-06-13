@@ -33,7 +33,7 @@ const imageFilePattern = /\.(png|jpg|jpeg)$/i;
 const maxTextLengthPerFile = 60000;
 
 if (window.pdfjsLib) {
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc = "./vendor/pdf.worker.min.js";
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_WORKER_SRC || "./vendor/pdf.worker.min.js";
 }
 
 document.documentElement.dataset.xlsxReady = window.XLSX ? "true" : "false";
