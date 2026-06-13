@@ -41,48 +41,21 @@
             </select>
           </label>
 
-          <label class="field">
-            <span>流程与制度</span>
-            <textarea id="processText" rows="6" placeholder="粘贴客户当前流程、制度、审批规则、跨部门协同方式等内容"></textarea>
-          </label>
-
-          <label class="field">
-            <span>调研纪要</span>
-            <textarea id="interviewText" rows="7" placeholder="粘贴访谈纪要、会议结论、业务痛点、客户原话等内容"></textarea>
-          </label>
-
-          <label class="field">
-            <span>补充材料</span>
-            <textarea id="documentText" rows="6" placeholder="粘贴文档摘要、表格字段、邮件、SOP、系统截图说明等内容"></textarea>
-          </label>
-
           <label class="field file-field">
-            <span>批量文件</span>
-            <input
-              id="materials"
-              type="file"
-              multiple
-              accept=".txt,.md,.csv,.tsv,.json,.xml,.html,.htm,.log,.sql,.yaml,.yml,.xlsx,.xls,.xlsm,.xlsb,.ods,.doc,.docx,.pdf,.ppt,.pptx,.mp3,.wav,.m4a,.aac,.png,.jpg,.jpeg"
-            />
-            <small>支持一次选择多个文件；会读取 Word、PDF、PPT、Excel、CSV、文本等可解析内容。</small>
+            <span>上传文件</span>
+            <input id="materials" type="file" multiple />
+            <small>支持一次选择多个任意格式文件；系统会尽量读取 Word、PDF、PPT、Excel、CSV、文本等可解析内容。</small>
           </label>
 
           <label class="field file-field">
             <span>文件夹</span>
-            <input
-              id="materialFolder"
-              type="file"
-              multiple
-              webkitdirectory
-              directory
-              accept=".txt,.md,.csv,.tsv,.json,.xml,.html,.htm,.log,.sql,.yaml,.yml,.xlsx,.xls,.xlsm,.xlsb,.ods,.doc,.docx,.pdf,.ppt,.pptx,.mp3,.wav,.m4a,.aac,.png,.jpg,.jpeg"
-            />
+            <input id="materialFolder" type="file" multiple webkitdirectory directory />
             <small>可直接上传客户资料文件夹，系统会保留子目录路径用于报告留痕。</small>
           </label>
 
           <div class="upload-summary" id="uploadSummary" aria-live="polite">
             <strong>未选择材料</strong>
-            <span>可上传流程文件、制度文档、调研纪要、Excel 台账、录音和图片等。</span>
+            <span>可上传任意格式文件或客户资料文件夹。</span>
           </div>
 
           <div class="form-actions">

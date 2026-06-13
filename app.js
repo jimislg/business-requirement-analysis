@@ -180,12 +180,19 @@ materialFolder.addEventListener("change", readSelectedMaterials);
 loadSample.addEventListener("click", () => {
   document.querySelector("#customerName").value = "大明电子";
   document.querySelector("#industry").value = "制造业";
-  document.querySelector("#processText").value =
-    "公司有完整的项目管理及产品先期策划程序，覆盖APQP、PPAP、DFMEA、PFMEA、控制计划、试生产、项目结项等表单，但立项、变更、物料申请、结项等流程仍大量依赖线下签字。";
-  document.querySelector("#interviewText").value =
-    "调研涉及信息科、总经办、项目部、研发中心、实验中心、工程/模具、质量、采购、计划、生产、营销、财务、人力等部门。共性痛点包括纸质流程、系统断层、预警缺失、客户资料和项目经验分散。";
-  document.querySelector("#documentText").value =
-    "ERP、PLM、PM、中模云、Excel并存但数据不互通。计划排产、实验进度、质量客诉、供应商绩效、销售交期反馈等场景缺少端到端透明化和自动催办。";
+  uploadedTexts = [
+    [
+      "【示例材料】",
+      "公司有完整的项目管理及产品先期策划程序，覆盖APQP、PPAP、DFMEA、PFMEA、控制计划、试生产、项目结项等表单，但立项、变更、物料申请、结项等流程仍大量依赖线下签字。",
+      "调研涉及信息科、总经办、项目部、研发中心、实验中心、工程/模具、质量、采购、计划、生产、营销、财务、人力等部门。",
+      "ERP、PLM、PM、中模云、Excel并存但数据不互通。计划排产、实验进度、质量客诉、供应商绩效、销售交期反馈等场景缺少端到端透明化和自动催办。",
+    ].join("\n"),
+  ];
+  uploadedNames = ["示例-大明电子APQP调研材料.txt"];
+  uploadedFiles = [{ name: uploadedNames[0], path: uploadedNames[0], size: uploadedTexts[0].length }];
+  materialRecords = [{ path: uploadedNames[0], type: "txt", status: "已解析", chars: uploadedTexts[0].length, text: uploadedTexts[0] }];
+  uploadStats = { total: 1, parsed: 1, folders: 0, types: { txt: 1 } };
+  renderUploadSummary();
 });
 
 form.addEventListener("submit", (event) => {
@@ -228,14 +235,11 @@ downloadHtml.addEventListener("click", async () => {
 function collectFormData() {
   const customerName = document.querySelector("#customerName").value.trim() || inferCustomerName() || "未命名客户";
   const industry = document.querySelector("#industry").value;
-  const processText = document.querySelector("#processText").value.trim();
-  const interviewText = document.querySelector("#interviewText").value.trim();
-  const documentText = document.querySelector("#documentText").value.trim();
-  const combinedText = [processText, interviewText, documentText, ...uploadedTexts, uploadedNames.join(" ")]
+  const combinedText = [...uploadedTexts, uploadedNames.join(" ")]
     .filter(Boolean)
     .join("\n");
 
-  return { customerName, industry, processText, interviewText, documentText, combinedText };
+  return { customerName, industry, combinedText };
 }
 
 function analyze(data) {
@@ -963,10 +967,11 @@ function updateMetrics(analysis) {
 }
 
 function calculateCoverage(data, materialSummary) {
-  const inputs = [data.customerName !== "未命名客户", data.processText, data.interviewText, data.documentText].filter(Boolean).length;
-  const parseScore = materialSummary.total ? Math.round((materialSummary.parsed / materialSummary.total) * 45) : 0;
-  const textScore = Math.min(Math.floor(data.combinedText.length / 500), 25);
-  return Math.min(100, 20 + inputs * 5 + parseScore + textScore);
+  const hasCustomer = data.customerName !== "未命名客户" ? 10 : 0;
+  const parseScore = materialSummary.total ? Math.round((materialSummary.parsed / materialSummary.total) * 55) : 0;
+  const fileScore = Math.min(materialSummary.total * 4, 20);
+  const textScore = Math.min(Math.floor(data.combinedText.length / 500), 15);
+  return Math.min(100, 15 + hasCustomer + parseScore + fileScore + textScore);
 }
 
 async function readSelectedMaterials() {
@@ -1158,7 +1163,7 @@ function renderUploadSummary(status) {
   if (!uploadedFiles.length) {
     uploadSummary.innerHTML = `
       <strong>未选择材料</strong>
-      <span>可上传流程文件、制度文档、调研纪要、Excel 台账、录音和图片等。</span>
+      <span>可上传任意格式文件或客户资料文件夹。</span>
     `;
     return;
   }
