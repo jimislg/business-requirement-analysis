@@ -610,7 +610,8 @@ textarea:focus {
 .solution-blueprint,
 .capability-blueprint,
 .implementation-board,
-.landscape-map {
+.landscape-map,
+.consulting-panel {
   border: 1px solid #d7e3e9;
   border-radius: 8px;
   background: #fff;
@@ -661,10 +662,81 @@ textarea:focus {
 .summary-cards span,
 .landscape-column span,
 .blueprint-step span,
-.implementation-board span {
+.implementation-board span,
+.consulting-lead span {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.55;
+}
+
+.consulting-panel {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(35, 100, 170, 0.08), transparent 58%),
+    #fff;
+}
+
+.consulting-panel.compact {
+  background: #fff;
+}
+
+.consulting-lead {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.consulting-lead b {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.consulting-tags,
+.question-grid,
+.evidence-trace {
+  display: grid;
+  gap: 8px;
+}
+
+.consulting-tags {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.consulting-tags span,
+.question-grid span,
+.evidence-trace div {
+  border: 1px solid #d8e5eb;
+  border-radius: 8px;
+  background: #f7fbfc;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px;
+}
+
+.question-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.evidence-trace {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.evidence-trace b {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.evidence-trace span {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .visual-stat {
@@ -1249,7 +1321,7 @@ textarea:focus {
 
 .function-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 980px;
   border-collapse: collapse;
   background: #fff;
   line-height: 1.55;
@@ -1284,17 +1356,21 @@ textarea:focus {
 }
 
 .function-table td:nth-child(1) {
-  width: 22%;
+  width: 18%;
   font-weight: 800;
   color: var(--ink);
 }
 
 .function-table td:nth-child(2) {
-  width: 42%;
+  width: 28%;
 }
 
 .function-table td:nth-child(3) {
-  width: 36%;
+  width: 30%;
+}
+
+.function-table td:nth-child(4) {
+  width: 24%;
 }
 
 .dashboard-visual {
@@ -1501,7 +1577,8 @@ textarea:focus {
   .report-header,
   .executive-summary,
   .diagnosis-panel,
-  .object-map {
+  .object-map,
+  .consulting-lead {
     grid-template-columns: 1fr;
   }
 
@@ -1564,7 +1641,10 @@ textarea:focus {
   .capability-blueprint,
   .implementation-board,
   .function-grid,
-  .evidence-grid {
+  .evidence-grid,
+  .consulting-tags,
+  .question-grid,
+  .evidence-trace {
     grid-template-columns: 1fr;
   }
 

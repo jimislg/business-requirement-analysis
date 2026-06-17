@@ -267,6 +267,19 @@ function analyze(data) {
   const status = buildCurrentStatus(data, materialSummary, departments, systems, forms, apqpDetected, themes, topTerms);
   const challenges = buildChallenges(pains, departments, systems, forms, text);
   const solution = buildSolution(data, apqpDetected, scenarios, systems, themes, detectedProcesses);
+  const consulting = buildConsultingView({
+    data,
+    departments,
+    pains,
+    scenarios,
+    forms,
+    systems,
+    themes,
+    topTerms,
+    detectedProcesses,
+    apqpDetected,
+    materialSummary,
+  });
   const riskLevel = risks.length >= 6 || pains.length >= 6 ? "高" : risks.length >= 4 ? "中" : "低";
 
   return {
@@ -288,7 +301,71 @@ function analyze(data) {
     themes,
     topTerms,
     detectedProcesses,
+    consulting,
     keywords: [...new Set([...pains.map((item) => item.label), ...systems, ...departments.map((item) => item.name), ...themes.map((item) => item.name), ...topTerms.slice(0, 8)])],
+  };
+}
+
+function buildConsultingView(context) {
+  const { data, departments, pains, scenarios, forms, systems, themes, topTerms, detectedProcesses, apqpDetected, materialSummary } = context;
+  const focus = detectedProcesses[0]?.name || themes[0]?.name || scenarios[0]?.title || topTerms[0] || data.industry;
+  const scope = themes.slice(0, 4).map((item) => item.name);
+  const modules = scenarios.slice(0, 5).map((item) => item.title);
+  const evidence = [
+    ...pains.flatMap((pain) => pain.evidence.map((item) => ({ title: pain.label, text: item }))),
+    ...themes.flatMap((theme) => theme.evidence.map((item) => ({ title: theme.name, text: item }))),
+  ].slice(0, 8);
+  const diagnosis = pains.length
+    ? `材料显示，${data.customerName}当前最需要优先处理的是${pains.slice(0, 3).map((item) => item.label).join("、")}，这些问题会直接影响${focus}的执行效率和管理可追溯性。`
+    : scope.length
+      ? `材料尚未暴露强烈痛点，但高频主题集中在${scope.join("、")}，咨询建议先把这些主题还原成流程、角色、字段和交付物，再判断系统建设边界。`
+      : `当前材料仍偏零散，咨询建议先完成资料归类和补充访谈，再进入正式系统蓝图。`;
+
+  const strategy = apqpDetected
+    ? `以${focus}为业务主线，不建议先做大而全的平台；应先围绕阶段评审、交付物、问题清单和质量阀做样板流程，再扩展到相关协同场景。`
+    : modules.length
+      ? `以${modules.slice(0, 3).join("、")}作为第一批样板，不按部门铺开，而是按“证据充分、痛点集中、跨部门影响大”的顺序推进。`
+      : `先建立需求事实库和访谈补充清单，避免在业务事实不足时直接给出系统模块清单。`;
+
+  const architecturePrinciple = systems.length
+    ? `系统框架需要围绕${systems.slice(0, 4).join("、")}的边界展开，先确认哪些数据由现有系统负责、哪些流程由新平台承接。`
+    : `系统框架暂不假设既有系统，应先围绕${scope.slice(0, 3).join("、") || focus}建立业务对象和流程台账，再决定是否需要集成。`;
+
+  const priorityBasis = [
+    pains.length ? `痛点强度：${pains.slice(0, 3).map((item) => `${item.label}(${item.score})`).join("、")}` : "",
+    departments.length ? `组织跨度：${departments.slice(0, 5).map((item) => item.name).join("、")}` : "",
+    systems.length ? `系统线索：${systems.join("、")}` : "",
+    forms.length ? `表单资产：识别到 ${forms.length} 类表单/节点` : "",
+    materialSummary.parsed ? `材料基础：已解析 ${materialSummary.parsed}/${materialSummary.total} 个材料` : "",
+  ].filter(Boolean);
+
+  const decisionRows = (scenarios.length ? scenarios : themes).slice(0, 6).map((item, index) => {
+    const title = item.title || `${item.name}管理模块`;
+    const reason = item.evidence && item.evidence.length
+      ? item.evidence[0]
+      : item.desc || `材料中${item.name || title}相关信号较高，建议纳入蓝图范围。`;
+    const consultingValue = pains[index]
+      ? `优先回应“${pains[index].label}”，降低后续方案偏离真实痛点的风险。`
+      : `把“${title}”转成可确认范围、可拆分任务、可验收成果的实施单元。`;
+    return [title, reason, consultingValue];
+  });
+
+  const landingQuestions = [
+    scope.length ? `客户是否认可${scope.slice(0, 3).join("、")}作为首批蓝图范围？` : "客户是否能补充更明确的流程样例和访谈纪要？",
+    departments.length ? `${departments[0].name}是否可以牵头确认跨部门责任边界？` : "是否已经明确业务牵头人和IT配合人？",
+    systems.length ? `${systems[0]}的数据字段、接口权限和更新频率是否可开放确认？` : "是否存在现有系统、Excel或历史台账需要纳入边界？",
+    forms.length ? `已识别表单是否存在多版本、废止版本或线下补签规则？` : "是否有表单、截图或台账样例可补充？",
+  ];
+
+  return {
+    focus,
+    diagnosis,
+    strategy,
+    architecturePrinciple,
+    priorityBasis,
+    decisionRows,
+    evidence,
+    landingQuestions,
   };
 }
 
@@ -650,7 +727,7 @@ function renderReport(data, analysis) {
     <article class="report-document">
       <header class="report-header">
         <div>
-          <p class="report-kicker">Digital Business Blueprint</p>
+          <p class="report-kicker">Consulting Assessment</p>
           <h2>${escapeHtml(data.customerName)}业务需求分析报告</h2>
           <div class="report-meta">
             <span>行业：${escapeHtml(data.industry)}</span>
@@ -707,6 +784,7 @@ function renderReport(data, analysis) {
 
       <section class="report-section">
         <h3>三、解决思路</h3>
+        ${renderConsultingPointOfView(analysis)}
         ${renderSolutionBlueprint(analysis)}
         ${renderProcessVisual(analysis)}
         <div class="solution-flow">
@@ -739,24 +817,27 @@ function renderReport(data, analysis) {
 
       <section class="report-section">
         <h3>四、业务系统框架</h3>
+        ${renderArchitectureAdvice(analysis)}
         ${renderCapabilityBlueprint(analysis)}
         ${renderArchitecture(analysis)}
       </section>
 
       <section class="report-section">
         <h3>五、系统功能说明</h3>
-        ${renderFunctionTable(analysis.functionRows)}
+        ${renderFunctionTable(analysis.functionRows, analysis)}
       </section>
 
       <section class="report-section">
         <h3>六、系统落地风险</h3>
         ${renderImplementationPlan(analysis)}
+        ${renderLandingQuestions(analysis)}
         <ul>${analysis.risks.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
       </section>
 
       <section class="report-section">
         <h3>七、证据摘要</h3>
         ${renderDashboardVisual(analysis)}
+        ${renderEvidenceTrace(analysis)}
         <div class="evidence-grid">
           ${analysis.pains
             .slice(0, 6)
@@ -896,6 +977,25 @@ function renderDiagnosisMatrix(analysis) {
   `;
 }
 
+function renderConsultingPointOfView(analysis) {
+  const basis = analysis.consulting.priorityBasis.slice(0, 5);
+  return `
+    <div class="consulting-panel">
+      <div class="consulting-lead">
+        <b>顾问判断</b>
+        <span>${escapeHtml(analysis.consulting.diagnosis)}</span>
+      </div>
+      <div class="consulting-lead">
+        <b>建议路径</b>
+        <span>${escapeHtml(analysis.consulting.strategy)}</span>
+      </div>
+      <div class="consulting-tags">
+        ${basis.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
 function buildDiagnosisDimensions(analysis) {
   const byPain = [
     ["流程在线化", "paper", 35],
@@ -923,6 +1023,25 @@ function buildDiagnosisDimensions(analysis) {
     ["系统边界", analysis.systems.length ? 50 : 28],
     ["落地准备度", analysis.functionRows.length ? 46 : 24],
   ];
+}
+
+function renderArchitectureAdvice(analysis) {
+  const focusItems = [
+    analysis.consulting.focus,
+    ...analysis.themes.slice(0, 3).map((item) => item.name),
+    ...analysis.systems.slice(0, 3),
+  ].filter(Boolean);
+  return `
+    <div class="consulting-panel compact">
+      <div class="consulting-lead">
+        <b>架构原则</b>
+        <span>${escapeHtml(analysis.consulting.architecturePrinciple)}</span>
+      </div>
+      <div class="consulting-tags">
+        ${[...new Set(focusItems)].slice(0, 6).map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
+      </div>
+    </div>
+  `;
 }
 
 function renderSolutionBlueprint(analysis) {
@@ -1174,31 +1293,49 @@ function renderPainMatrix(analysis) {
   `;
 }
 
-function renderFunctionTable(rows) {
+function renderFunctionTable(rows, analysis) {
+  const decisionRows = analysis.consulting.decisionRows.length ? analysis.consulting.decisionRows : rows.map((row) => [row[0], row[1], row[2]]);
   return `
     <div class="function-table-wrap">
       <table class="function-table">
         <thead>
           <tr>
             <th>功能模块</th>
+            <th>咨询判断</th>
             <th>功能说明</th>
             <th>带来的价值</th>
           </tr>
         </thead>
         <tbody>
           ${rows
-            .map(
-              ([module, desc, value]) => `
+            .map(([module, desc, value], index) => {
+              const decision = decisionRows[index] || [module, desc, value];
+              return `
                 <tr>
                   <td>${escapeHtml(module)}</td>
+                  <td>${escapeHtml(decision[1])}</td>
                   <td>${escapeHtml(desc)}</td>
-                  <td>${escapeHtml(value)}</td>
+                  <td>${escapeHtml(decision[2] || value)}</td>
                 </tr>
-              `,
-            )
+              `;
+            })
             .join("")}
         </tbody>
       </table>
+    </div>
+  `;
+}
+
+function renderLandingQuestions(analysis) {
+  return `
+    <div class="consulting-panel compact">
+      <div class="consulting-lead">
+        <b>落地前提</b>
+        <span>以下问题建议在蓝图评审会上由客户业务负责人确认，否则后续实施容易出现范围漂移或责任不清。</span>
+      </div>
+      <div class="question-grid">
+        ${analysis.consulting.landingQuestions.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
+      </div>
     </div>
   `;
 }
@@ -1229,6 +1366,27 @@ function renderDashboardVisual(analysis) {
         <div><span>表单线索</span><b>${analysis.forms.length}</b></div>
         <div><span>证据片段</span><b>${analysis.pains.reduce((sum, item) => sum + item.evidence.length, 0)}</b></div>
       </div>
+    </div>
+  `;
+}
+
+function renderEvidenceTrace(analysis) {
+  const evidence = analysis.consulting.evidence.length
+    ? analysis.consulting.evidence
+    : analysis.consulting.priorityBasis.map((item) => ({ title: "分析依据", text: item }));
+  return `
+    <div class="evidence-trace">
+      ${evidence
+        .slice(0, 6)
+        .map(
+          (item) => `
+            <div>
+              <b>${escapeHtml(item.title)}</b>
+              <span>${escapeHtml(item.text)}</span>
+            </div>
+          `,
+        )
+        .join("")}
     </div>
   `;
 }
