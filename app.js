@@ -42,16 +42,6 @@ document.documentElement.dataset.docxReady = window.mammoth ? "true" : "false";
 document.documentElement.dataset.pptxReady = window.JSZip ? "true" : "false";
 document.documentElement.dataset.pdfReady = window.pdfjsLib ? "true" : "false";
 
-const industryModules = {
-  制造业: ["APQP项目管理中心", "研发变更协同中心", "质量问题闭环中心", "供应商协同门户", "产销计划协同看板"],
-  零售与消费: ["商品与订单中心", "客户经营门户", "门店运营看板", "供应链协同", "营销活动管理"],
-  金融服务: ["客户尽调中心", "风险审批中心", "合同档案中心", "合规留痕中心", "经营报表中心"],
-  医疗健康: ["患者服务中心", "耗材管理中心", "排班协同中心", "质控管理中心", "数据合规中心"],
-  教育培训: ["线索招生中心", "课程排课中心", "学员服务中心", "教师协同中心", "教务报表中心"],
-  政企服务: ["事项受理中心", "公文流转中心", "项目监督中心", "档案归集中心", "绩效评价中心"],
-  通用企业: ["流程审批中心", "客户管理中心", "项目管理中心", "数据报表中心", "知识文档中心"],
-};
-
 const departmentRules = [
   { name: "信息科", keys: ["信息科", "信息部", "IT", "低代码", "权限", "钉钉", "飞书", "系统培训"] },
   { name: "总经办", keys: ["总经办", "董事长", "总经理", "追责", "时效性", "绩效"] },
@@ -271,9 +261,9 @@ function analyze(data) {
   const materialSummary = summarizeMaterials();
   const coverage = calculateCoverage(data, materialSummary);
   const risks = buildRisks(data, pains, systems, forms, apqpDetected, themes);
-  const framework = buildFramework(data.industry, scenarios, systems, apqpDetected, themes, detectedProcesses);
+  const framework = buildFramework(data.industry, scenarios, systems, forms, apqpDetected, themes, detectedProcesses, topTerms);
   const functionRows = buildFunctionRows(scenarios, pains, apqpDetected, themes);
-  const roadmap = buildRoadmap(apqpDetected, scenarios, themes);
+  const roadmap = buildRoadmap(apqpDetected, scenarios, themes, systems);
   const status = buildCurrentStatus(data, materialSummary, departments, systems, forms, apqpDetected, themes, topTerms);
   const challenges = buildChallenges(pains, departments, systems, forms, text);
   const solution = buildSolution(data, apqpDetected, scenarios, systems, themes, detectedProcesses);
@@ -319,7 +309,7 @@ function buildCurrentStatus(data, materialSummary, departments, systems, forms, 
   }
 
   if (!apqpDetected && themes.length) {
-    status.push(`材料高频主题集中在 ${themes.slice(0, 5).map((item) => item.name).join("、")}，后续方案应围绕这些真实业务域展开，而不是套用固定行业模板。`);
+    status.push(`材料高频主题集中在 ${themes.slice(0, 5).map((item) => item.name).join("、")}，后续方案应围绕这些真实业务域展开，而不是套用既有行业话术。`);
   }
 
   if (!apqpDetected && !themes.length && topTerms.length) {
@@ -327,7 +317,8 @@ function buildCurrentStatus(data, materialSummary, departments, systems, forms, 
   }
 
   if (systems.length) {
-    status.push(`现有系统或工具线索包括 ${systems.join("、")}，但材料显示这些系统与线下表单、Excel、即时沟通之间仍存在断层。`);
+    const relation = forms.length ? `与 ${forms.slice(0, 4).join("、")} 等材料资产之间` : "与当前业务流程之间";
+    status.push(`现有系统或工具线索包括 ${systems.join("、")}，需要进一步确认${relation}的数据边界、责任归属和更新频率。`);
   }
 
   if (!materialSummary.parsed) {
@@ -453,12 +444,12 @@ function buildChallenges(pains, departments, systems, forms, text) {
     items.push(`系统并存但口径不一：${systems.slice(0, 6).join("、")} 等工具需要明确主数据、接口边界和回写规则。`);
   }
 
-  if (/主机厂|蔚来|小鹏|理想|客户/.test(text)) {
-    items.push("外部客户数字化要求提升：主机厂客户对响应速度、交付透明度和过程留痕的要求正在倒逼内部协同升级。");
+  if (/主机厂|蔚来|小鹏|理想|客户要求|客户投诉|客户反馈|客户问询/.test(text)) {
+    items.push("客户侧响应要求明确：材料中出现客户要求、反馈或问询线索，需要把对外承诺、内部处理状态和责任闭环拉通。");
   }
 
   if (departments.length >= 8) {
-    items.push("跨部门协同跨度大：项目、研发、质量、采购、计划、生产、营销、财务等部门共同参与，必须先定义责任边界和SLA。");
+    items.push(`跨部门协同跨度大：材料覆盖 ${departments.slice(0, 8).map((item) => item.name).join("、")} 等角色，必须先定义责任边界、交接规则和响应时限。`);
   }
 
   return [...new Set(items)].slice(0, 9);
@@ -486,19 +477,22 @@ function buildSolution(data, apqpDetected, scenarios, systems, themes, detectedP
     solution.push(`同步梳理 ${systems.slice(0, 5).join("、")} 的数据接口、字段口径和主数据归属，避免协同平台变成新的孤岛。`);
   }
 
-  solution.push("采用“试点流程上线、核心场景铺开、系统集成深化、经营驾驶舱沉淀”的分阶段路线，边上线边校准组织规则。");
+  const firstModule = scenarios[0]?.title || themes[0]?.name || "已识别高频场景";
+  solution.push(`落地节奏建议从“${firstModule}”开始验证，再按材料中出现频次和跨部门影响范围逐步扩展，边上线边校准组织规则。`);
   return solution;
 }
 
-function buildFramework(industry, scenarios, systems, apqpDetected, themes, detectedProcesses) {
+function buildFramework(industry, scenarios, systems, forms, apqpDetected, themes, detectedProcesses, topTerms) {
   if (apqpDetected) {
+    const apqpModules = scenarios.length ? scenarios.map((item) => item.title).slice(0, 5) : themes.slice(0, 5).map((item) => `${item.name}管理`);
+    const apqpForms = forms.length ? forms.slice(0, 5).join("、") : "材料中出现的APQP交付物";
+    const apqpSystems = systems.length ? systems.join("、") : "待确认现有系统";
     return [
-      ["统一入口层", "PC工作台、移动端待办、消息提醒、项目空间、部门看板和外部协作入口。"],
-      ["APQP项目层", "项目立项、团队任命、阶段计划、质量阀、交付物、问题清单、结项/终止。"],
-      ["研发质量层", "设计变更、DFMEA/PFMEA、控制计划、试生产、客诉闭环、实验委托和质量分析。"],
-      ["供应链协同层", "供应商准入、采购订单、长周期物料、到货跟踪、计划排产、生产交付。"],
-      ["知识资产层", "客户档案、项目经验、图纸版本、会议纪要、问题复盘、离职交接。"],
-      ["集成数据层", `${systems.length ? systems.join("、") : "ERP、PLM、MES、费控等系统"} 的数据同步、主数据映射、指标口径和管理驾驶舱。`],
+      ["统一入口层", `${apqpModules.join("、") || "APQP过程"} 的任务入口、阶段提醒、材料归档和部门视图。`],
+      ["APQP项目层", `${apqpForms} 的阶段计划、责任人、质量阀、交付物和问题清单。`],
+      ["协同执行层", `${themes.length ? themes.slice(0, 4).map((item) => item.name).join("、") : apqpModules.join("、") || "APQP相关事项"} 等材料高频主题的跨部门流转。`],
+      ["资料资产层", `${forms.length ? forms.slice(0, 6).join("、") : "制度、表单、会议纪要"} 的版本、附件、审批记录和复盘沉淀。`],
+      ["集成数据层", `${apqpSystems} 的数据同步、字段映射、指标口径和分析视图。`],
     ];
   }
 
@@ -508,18 +502,27 @@ function buildFramework(industry, scenarios, systems, apqpDetected, themes, dete
       ? themes.slice(0, 6).map((item) => `${item.name}管理`)
       : detectedProcesses.length
         ? detectedProcesses.map((item) => `${item.name}流程管理`)
-        : industryModules[industry] || industryModules["通用企业"];
+        : topTerms.length
+          ? topTerms.slice(0, 5).map((item) => `${item}需求线索`)
+          : ["材料解析", "访谈补充", "需求澄清"];
+  const channelDesc = systems.length
+    ? `${systems.slice(0, 4).join("、")} 工作入口、消息提醒和材料归档。`
+    : "围绕已上传材料建立工作入口、任务提醒和材料归档。";
+  const integrationDesc = systems.length
+    ? `${systems.join("、")} 对接、字段口径、权限审计和运维监控。`
+    : "待客户补充现有系统后，再确认对接方式、权限审计和运维边界。";
   return [
-    ["统一入口层", "PC工作台、移动端、消息待办、外部门户。"],
-    ["流程协同层", "流程编排、审批规则、状态流转、任务提醒、操作留痕。"],
+    ["统一入口层", channelDesc],
+    ["流程协同层", `${modules.slice(0, 3).join("、")} 的流程编排、状态流转、任务提醒和操作留痕。`],
     ["业务能力层", modules.join("、") + "。"],
-    ["数据分析层", "主数据、业务台账、指标口径、报表看板、预警模型。"],
-    ["集成治理层", `${systems.length ? systems.join("、") : "ERP、OA、CRM、财务系统"} 对接、权限、审计和运维监控。`],
+    ["数据分析层", `${themes.length ? themes.slice(0, 4).map((item) => item.name).join("、") : modules.slice(0, 4).join("、")} 的业务台账、指标口径、统计视图和异常提醒。`],
+    ["集成治理层", integrationDesc],
   ];
 }
 
 function buildRisks(data, pains, systems, forms, apqpDetected, themes) {
-  const risks = ["需求边界需要在蓝图阶段冻结核心流程、关键表单和首批试点场景，避免范围持续扩张影响交付节奏。"];
+  const focus = themes[0]?.name || data.industry || "当前业务";
+  const risks = [`${focus}范围需要在蓝图阶段明确首批流程、关键表单和试点场景，避免材料持续补充导致交付边界漂移。`];
 
   if (forms.length >= 20) {
     risks.push("表单数量多且历史版本复杂，需要先做表单合并、字段标准化和流程重构，不能简单照搬Excel版式。");
@@ -530,7 +533,7 @@ function buildRisks(data, pains, systems, forms, apqpDetected, themes) {
   }
 
   if (systems.length >= 3) {
-    risks.push("系统集成涉及接口权限、编码映射、字段口径和数据回写，需提前完成ERP/PLM/PM等系统摸底。");
+    risks.push(`${systems.slice(0, 5).join("、")} 的集成涉及接口权限、编码映射、字段口径和数据回写，需提前完成系统摸底。`);
   }
 
   if (pains.some((item) => item.id === "knowledge")) {
@@ -598,26 +601,36 @@ function buildFunctionRows(scenarios, pains, apqpDetected, themes) {
       return mapping[item.id];
     }
 
-    return [item.title, item.desc, painText ? `直接回应 ${painText} 等痛点，提升流程效率和数据透明度。` : "提升流程效率、数据透明度和管理可追溯性。"];
+    const evidence = item.evidence && item.evidence.length ? `材料证据：${item.evidence[0]}` : "";
+    return [
+      item.title,
+      evidence ? `${item.desc} ${evidence}` : item.desc,
+      painText ? `直接回应 ${painText} 等痛点，减少人工追踪和信息反复确认。` : `把“${item.title}”从资料线索转成可跟踪、可统计、可复盘的业务闭环。`,
+    ];
   });
 }
 
-function buildRoadmap(apqpDetected, scenarios, themes) {
+function buildRoadmap(apqpDetected, scenarios, themes, systems) {
   if (apqpDetected) {
+    const first = scenarios[0]?.title || `${themes[0]?.name || "APQP"}流程`;
+    const second = scenarios.slice(1, 4).map((item) => item.title).join("、") || themes.slice(1, 4).map((item) => `${item.name}管理`).join("、") || "APQP关联场景";
     return [
-      ["1-2个月", "试点验证", "研发设计变更、质量客诉处理、核心审批移动端优化", "完成2-3个标杆流程上线，验证复杂表单可读性和催办机制"],
-      ["3-6个月", "场景铺开", "APQP项目空间、实验委托、供应商协同、产销计划看板", "80%高频纸质流程线上化，跨部门协同效率显著提升"],
-      ["6个月+", "集成深化", "ERP/PLM/PM/中模云/费控数据集成、经营驾驶舱、知识库", "打通关键数据链路，形成管理驾驶舱和组织知识资产"],
+      ["1-2个月", "APQP样板验证", `围绕${first}梳理阶段、表单、责任人和质量阀规则`, "用已上传材料验证复杂表单、催办、归档和阶段评审可用性"],
+      ["3-6个月", "关联场景铺开", `扩展${second}，补齐跨部门任务、问题清单和交付物跟踪`, "让APQP相关材料从文件归档转为过程协同"],
+      ["6个月+", "数据与复盘深化", "打通材料中已出现系统的数据边界，沉淀项目复盘、指标分析和知识资产", "形成可追溯、可统计、可复用的APQP过程资产"],
     ];
   }
 
   if (themes.length || scenarios.length) {
     const first = scenarios[0]?.title || `${themes[0]?.name || "核心业务"}管理`;
     const second = scenarios.slice(1, 4).map((item) => item.title).join("、") || themes.slice(1, 4).map((item) => `${item.name}管理`).join("、") || "相关业务模块";
+    const integration = systems.length
+      ? `打通 ${systems.slice(0, 4).join("、")} 的数据边界，统一${themes.slice(0, 3).map((item) => item.name).join("、") || "核心业务"}指标口径`
+      : `围绕${themes.slice(0, 3).map((item) => item.name).join("、") || first}沉淀指标口径、统计视图和复盘资料`;
     return [
       ["1-2个月", "资料核验与试点", `围绕${first}梳理流程、字段、角色和样表，先上线一个真实场景`, "验证材料识别结果和用户操作路径，形成可复用样板"],
       ["3-6个月", "主题场景扩展", `扩展${second}，补齐台账、审批、提醒、报表和归档`, "形成跨部门业务闭环，减少线下追踪和重复汇总"],
-      ["6个月+", "数据治理与集成", "打通现有系统、统一指标口径、沉淀经营看板和知识库", "让系统从流程工具升级为管理决策和组织知识资产"],
+      ["6个月+", systems.length ? "系统数据治理" : "指标与复盘治理", integration, "让报告中识别出的业务线索沉淀为可统计、可追溯、可复用的管理资产"],
     ];
   }
 
@@ -767,6 +780,8 @@ function renderExecutiveSummary(data, analysis) {
   const topModules = analysis.functionRows.slice(0, 4).map((row) => row[0]);
   const topThemes = analysis.themes.slice(0, 4).map((item) => item.name);
   const mainline = inferMainline(analysis);
+  const buildMode = inferBuildMode(analysis);
+  const target = inferDeliveryTarget(analysis);
   const conclusion = topPains.length
     ? `当前核心矛盾集中在${topPains.join("、")}，建议以${topModules.join("、") || mainline}作为首批数字化抓手。`
     : topThemes.length
@@ -780,11 +795,32 @@ function renderExecutiveSummary(data, analysis) {
       </div>
       <div class="summary-cards">
         <div><b>业务主线</b><span>${escapeHtml(mainline)}</span></div>
-        <div><b>建设方式</b><span>场景试点 + 能力平台 + 数据集成</span></div>
-        <div><b>交付目标</b><span>流程可追踪、数据可复用、经营可分析</span></div>
+        <div><b>建设方式</b><span>${escapeHtml(buildMode)}</span></div>
+        <div><b>交付目标</b><span>${escapeHtml(target)}</span></div>
       </div>
     </div>
   `;
+}
+
+function inferBuildMode(analysis) {
+  const first = analysis.functionRows[0]?.[0] || analysis.themes[0]?.name || "资料解析";
+  const second = analysis.systems.length ? `${analysis.systems.slice(0, 2).join("、")}集成` : "规则固化";
+  return `${first}试点 + ${second} + 分阶段推广`;
+}
+
+function inferDeliveryTarget(analysis) {
+  if (analysis.pains.length) {
+    return analysis.pains
+      .slice(0, 3)
+      .map((item) => item.label.replace(/与/g, "").replace(/不足|缺失|薄弱|分散|脱节|黑盒|伪合规/g, "改善"))
+      .join("、");
+  }
+
+  if (analysis.themes.length) {
+    return `${analysis.themes.slice(0, 3).map((item) => item.name).join("、")}可追踪可统计`;
+  }
+
+  return "材料可归类、需求可追溯、边界可确认";
 }
 
 function inferMainline(analysis) {
@@ -816,11 +852,11 @@ function renderCurrentLandscape(analysis) {
     <div class="landscape-map">
       <div class="landscape-column">
         <b>组织覆盖</b>
-        <div>${(departments.length ? departments : ["业务部门", "管理层", "IT部门"]).map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>
+        <div>${(departments.length ? departments : ["材料未体现明确部门"]).map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>
       </div>
       <div class="landscape-column">
         <b>系统现状</b>
-        <div>${(systems.length ? systems : ["ERP", "Excel", "流程审批"]).map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>
+        <div>${(systems.length ? systems : ["材料未体现明确系统"]).map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>
       </div>
       <div class="landscape-column">
         <b>材料资产</b>
@@ -832,11 +868,16 @@ function renderCurrentLandscape(analysis) {
 
 function renderDiagnosisMatrix(analysis) {
   const dimensions = buildDiagnosisDimensions(analysis);
+  const title = analysis.themes.length
+    ? `${analysis.themes[0].name}成熟度诊断`
+    : analysis.pains.length
+      ? `${analysis.pains[0].label}诊断`
+      : "材料完整度诊断";
   return `
     <div class="diagnosis-panel">
       <div class="diagnosis-title">
         <span>成熟度诊断</span>
-        <strong>从“流程可执行”升级到“过程可经营”</strong>
+        <strong>${escapeHtml(title)}</strong>
       </div>
       <div class="maturity-bars">
         ${dimensions
@@ -887,6 +928,7 @@ function buildDiagnosisDimensions(analysis) {
 function renderSolutionBlueprint(analysis) {
   const modules = analysis.functionRows.slice(0, 5).map((row) => row[0]);
   const objects = buildObjectLabels(analysis).slice(0, 5).join("、") || "流程、表单、数据、角色";
+  const closure = analysis.pains[0]?.label || analysis.themes[0]?.name || "需求线索";
   return `
     <div class="solution-blueprint">
       <div class="blueprint-step">
@@ -901,7 +943,7 @@ function renderSolutionBlueprint(analysis) {
       <div class="blueprint-arrow"></div>
       <div class="blueprint-step">
         <b>3. 数据闭环经营</b>
-        <span>形成预警、SLA、指标看板、知识沉淀和持续优化机制。</span>
+        <span>围绕${escapeHtml(closure)}形成指标、提醒、责任闭环和复盘机制。</span>
       </div>
     </div>
   `;
@@ -954,30 +996,34 @@ function buildCapabilityGroups(analysis) {
 
   return [
     ...themeGroups,
-    ["平台治理域", ["流程引擎", "权限审计", "消息待办", "数据集成"]],
+    analysis.systems.length
+      ? ["系统集成域", analysis.systems.slice(0, 4).map((item) => `${item}边界`)]
+      : ["资料治理域", ["材料归类", "字段抽取", "证据追溯", "补充清单"]],
   ].slice(0, 4);
 }
 
 function renderImplementationPlan(analysis) {
   const riskCount = analysis.risks.length;
   const firstTheme = analysis.themes[0]?.name || analysis.functionRows[0]?.[0] || "核心业务";
+  const modules = analysis.functionRows.slice(0, 3).map((row) => row[0]);
+  const systems = analysis.systems.slice(0, 3);
   return `
     <div class="implementation-board">
       <div>
-        <b>蓝图确认</b>
-        <span>冻结首批场景、角色、表单字段、审批规则和集成边界。</span>
+        <b>${escapeHtml(firstTheme)}核验</b>
+        <span>确认材料中出现的角色、表单字段、状态节点和责任边界。</span>
       </div>
       <div>
-        <b>试点上线</b>
-        <span>优先选择${escapeHtml(firstTheme)}相关高频场景上线，用真实业务验证可用性。</span>
+        <b>${escapeHtml(modules[0] || "首个场景")}试点</b>
+        <span>用真实材料样例验证填报、审批、提醒、归档和查询路径。</span>
       </div>
       <div>
-        <b>规模推广</b>
-        <span>扩展到${escapeHtml(analysis.functionRows.slice(0, 3).map((row) => row[0]).join("、") || "已识别业务模块")}。</span>
+        <b>模块扩展</b>
+        <span>扩展到${escapeHtml(modules.join("、") || "已识别业务模块")}。</span>
       </div>
       <div>
-        <b>运营治理</b>
-        <span>围绕${riskCount}类风险建立SLA、预警、权限和数据质量机制。</span>
+        <b>${systems.length ? "系统协同" : "持续治理"}</b>
+        <span>${escapeHtml(systems.length ? `围绕 ${systems.join("、")} 明确接口、字段和权限规则。` : `围绕${riskCount}类风险建立校验、提醒和数据质量机制。`)}</span>
       </div>
     </div>
   `;
@@ -987,6 +1033,7 @@ function renderCoverVisual(analysis) {
   const bars = [analysis.pains.length, analysis.scenarios.length, analysis.systems.length, analysis.departments.length].map((value) =>
     Math.min(92, Math.max(26, value * 9)),
   );
+  const chips = [...analysis.themes.map((item) => item.name), ...analysis.systems, ...analysis.detectedProcesses.map((item) => item.name)].slice(0, 3);
   return `
     <div class="cover-panel" aria-hidden="true">
       <div class="cover-grid-icon">
@@ -996,7 +1043,7 @@ function renderCoverVisual(analysis) {
         ${bars.map((height) => `<i style="height:${height}%"></i>`).join("")}
       </div>
       <div class="cover-chip-row">
-        <span>流程</span><span>数据</span><span>协同</span>
+        ${(chips.length ? chips : ["材料", "线索", "报告"]).map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
       </div>
     </div>
   `;
@@ -1008,7 +1055,7 @@ function renderObjectMap(analysis) {
     <div class="object-map">
       <div class="object-core">
         <strong>统一业务模型</strong>
-        <span>${escapeHtml(analysis.systems.slice(0, 5).join(" / ") || "流程 / 表单 / 数据 / 角色")}</span>
+        <span>${escapeHtml(buildObjectLabels(analysis).slice(0, 4).join(" / ") || "材料 / 线索 / 证据 / 访谈")}</span>
       </div>
       <div class="object-rings">
         ${objects
@@ -1043,9 +1090,11 @@ function renderProcessVisual(analysis) {
   const stages = analysis.detectedProcesses.some((item) => item.name === "APQP") || analysis.scenarios.some((item) => item.id === "apqp")
     ? ["需求/立项", "计划/团队", "设计/变更", "试制/验证", "量产/交付", "复盘/知识"]
     : analysis.themes.length
-      ? ["资料识别", `${analysis.themes[0].name}建模`, "流程试点", "场景扩展", "数据集成", "经营分析"]
-      : ["识别", "建模", "试点", "推广", "集成", "经营"];
-  const lanes = analysis.departments.slice(0, 2).map((item) => item.name).concat("系统平台").slice(0, 3);
+      ? ["资料识别", `${analysis.themes[0].name}建模`, `${analysis.themes[0].name}试点`, analysis.themes[1] ? `${analysis.themes[1].name}扩展` : "场景扩展", analysis.systems[0] ? `${analysis.systems[0]}协同` : "数据沉淀", "复盘优化"]
+      : analysis.topTerms.length
+        ? analysis.topTerms.slice(0, 6)
+        : ["材料识别", "需求澄清", "蓝图确认", "试点验证", "资料补齐", "复盘优化"];
+  const lanes = analysis.departments.slice(0, 2).map((item) => item.name).concat(analysis.systems[0] || "待确认系统").slice(0, 3);
   return `
     <div class="process-window">
       <div class="window-top"><span></span><span></span><span></span><b>流程泳道示意</b></div>
@@ -1079,18 +1128,16 @@ function renderArchitecture(analysis) {
       `,
     )
     .join("");
-  const scenarioNodes = analysis.scenarios
-    .slice(0, 6)
-    .map((item) => `<span>${escapeHtml(item.title)}</span>`)
-    .join("");
+  const scenarioItems = analysis.scenarios.length
+    ? analysis.scenarios.slice(0, 6).map((item) => item.title)
+    : analysis.functionRows.slice(0, 6).map((row) => row[0]);
+  const scenarioNodes = scenarioItems.map((item) => `<span>${escapeHtml(item)}</span>`).join("");
 
   return `
     <div class="architecture">
       <div class="arch-side">
         <strong>业务入口</strong>
-        <span>PC</span>
-        <span>移动端</span>
-        <span>外部协作</span>
+        ${(analysis.departments.length ? analysis.departments.slice(0, 3).map((item) => item.name) : buildObjectLabels(analysis).slice(0, 3)).map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
       </div>
       <div class="arch-main">
         ${layers}
@@ -1098,9 +1145,7 @@ function renderArchitecture(analysis) {
       </div>
       <div class="arch-side">
         <strong>治理能力</strong>
-        <span>权限</span>
-        <span>审计</span>
-        <span>预警</span>
+        ${(analysis.pains.length ? analysis.pains.slice(0, 3).map((item) => item.label) : ["证据追溯", "边界确认", "质量校验"]).map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
       </div>
     </div>
   `;
@@ -1162,10 +1207,11 @@ function renderDashboardVisual(analysis) {
   const painCount = Math.max(analysis.pains.length, 1);
   const systems = Math.max(analysis.systems.length, 1);
   const closed = Math.min(78, 38 + analysis.functionRows.length * 4);
+  const focus = analysis.themes[0]?.name || analysis.detectedProcesses[0]?.name || analysis.functionRows[0]?.[0] || "材料线索";
   return `
     <div class="dashboard-visual">
       <div class="mini-chart">
-        <strong>痛点分布</strong>
+        <strong>${escapeHtml(focus)}信号</strong>
         <div class="bar-chart">
           <span style="height:${Math.min(92, painCount * 9)}%"></span>
           <span style="height:${Math.min(92, systems * 11)}%"></span>
@@ -1174,9 +1220,9 @@ function renderDashboardVisual(analysis) {
         </div>
       </div>
       <div class="mini-chart">
-        <strong>闭环建议</strong>
+        <strong>${escapeHtml(focus)}闭环</strong>
         <div class="donut-visual" style="--value:${closed}"></div>
-        <span>${closed}% 场景可优先线上化</span>
+        <span>${closed}% 建议优先结构化</span>
       </div>
       <div class="metric-stack">
         <div><span>系统线索</span><b>${analysis.systems.length}</b></div>
