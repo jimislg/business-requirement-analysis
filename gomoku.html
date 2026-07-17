@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>五子棋</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23e8b96b'/%3E%3Ccircle cx='24' cy='24' r='8' fill='%23111'/%3E%3Ccircle cx='40' cy='40' r='8' fill='%23fff' stroke='%23999'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./gomoku.css?v=20260617-gomoku" />
+  </head>
+  <body>
+    <main class="gomoku-shell">
+      <header class="gomoku-header">
+        <div class="gomoku-brand">
+          <a href="./index.html" class="back-link" title="返回工作台">← 工作台</a>
+          <h1>五子棋</h1>
+        </div>
+        <div class="status-bar" id="statusBar" aria-live="polite">
+          <span class="turn-indicator" id="turnIndicator">
+            <span class="stone-dot black" aria-hidden="true"></span>
+            <span id="turnText">黑棋落子</span>
+          </span>
+        </div>
+      </header>
+
+      <section class="gomoku-body">
+        <div class="board-wrap">
+          <canvas
+            id="board"
+            width="640"
+            height="640"
+            role="img"
+            aria-label="五子棋棋盘"
+          ></canvas>
+        </div>
+
+        <aside class="control-panel" aria-label="游戏控制">
+          <div class="mode-switch">
+            <h3>对战模式</h3>
+            <label class="mode-option">
+              <input type="radio" name="mode" value="pvp" checked />
+              <span>人人对战</span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="mode" value="pve" />
+              <span>人机对战（电脑执白）</span>
+            </label>
+          </div>
+
+          <div class="action-buttons">
+            <button type="button" id="restartBtn" class="btn primary">重新开始</button>
+            <button type="button" id="undoBtn" class="btn secondary">悔棋</button>
+          </div>
+
+          <div class="info-block">
+            <h3>游戏说明</h3>
+            <ul>
+              <li>黑棋先行，双方轮流落子。</li>
+              <li>横、竖、斜任意方向连成五子即胜。</li>
+              <li>人机模式下你执黑，电脑执白。</li>
+              <li>点击「悔棋」可撤销上一步。</li>
+            </ul>
+          </div>
+
+          <div class="history-block">
+            <h3>落子记录</h3>
+            <ol id="historyList" class="history-list" aria-live="polite"></ol>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./gomoku.js?v=20260617-gomoku"></script>
+  </body>
+</html>
