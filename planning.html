@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>计划管理 - 项目计划工作台</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232364aa'/%3E%3Cpath d='M14 22h28v4H14zm0 10h36v4H14zm0 10h22v4H14z' fill='white'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./planning.css?v=20260618-planning" />
+  </head>
+  <body>
+    <main class="planning-shell">
+      <header class="planning-header">
+        <div class="planning-brand">
+          <a href="./index.html" class="back-link" title="返回工作台">← 工作台</a>
+          <h1>项目计划管理</h1>
+        </div>
+        <div class="planning-actions">
+          <button type="button" id="exportBtn" class="btn secondary" title="导出 JSON">导出数据</button>
+          <button type="button" id="resetBtn" class="btn secondary" title="重置为演示样例">重置演示数据</button>
+          <button type="button" id="clearBtn" class="btn danger" title="清空全部数据">清空</button>
+        </div>
+      </header>
+
+      <section class="summary-strip" aria-label="项目概览">
+        <div class="summary-card">
+          <strong id="summaryTotal">0</strong>
+          <span>任务总数</span>
+        </div>
+        <div class="summary-card">
+          <strong id="summaryDone">0</strong>
+          <span>已完成</span>
+        </div>
+        <div class="summary-card">
+          <strong id="summaryDoing">0</strong>
+          <span>进行中</span>
+        </div>
+        <div class="summary-card">
+          <strong id="summaryTodo">0</strong>
+          <span>未开始</span>
+        </div>
+        <div class="summary-card">
+          <strong id="summaryMembers">0</strong>
+          <span>团队成员</span>
+        </div>
+        <div class="summary-card">
+          <strong id="summaryProgress">0%</strong>
+          <span>整体进度</span>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="任务计划表">
+        <div class="panel-head">
+          <h2>计划表</h2>
+          <div class="panel-tools">
+            <input id="taskSearch" type="search" class="search-input" placeholder="搜索任务名 / 负责人" />
+            <button type="button" id="addTaskBtn" class="btn primary">+ 新增任务</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="task-table">
+            <thead>
+              <tr>
+                <th>任务名</th>
+                <th>负责人</th>
+                <th>开始日期</th>
+                <th>结束日期</th>
+                <th>状态</th>
+                <th>进度</th>
+                <th class="col-actions">操作</th>
+              </tr>
+            </thead>
+            <tbody id="taskTbody"></tbody>
+          </table>
+        </div>
+        <p id="taskEmpty" class="empty-row">暂无任务，点击「新增任务」开始。</p>
+      </section>
+
+      <section class="two-col" aria-label="团队与统计">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>人员团队</h2>
+            <button type="button" id="addMemberBtn" class="btn primary small">+ 新增成员</button>
+          </div>
+          <div class="table-wrap">
+            <table class="member-table">
+              <thead>
+                <tr>
+                  <th>姓名</th>
+                  <th>角色</th>
+                  <th class="col-actions">操作</th>
+                </tr>
+              </thead>
+              <tbody id="memberTbody"></tbody>
+            </table>
+          </div>
+          <p id="memberEmpty" class="empty-row">暂无成员，点击「新增成员」添加。</p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>完成统计</h2>
+          </div>
+          <div class="stat-block">
+            <h3>按状态分布</h3>
+            <div class="bar-chart" id="statusChart" aria-label="按状态统计柱状图"></div>
+            <div class="legend" id="statusLegend"></div>
+          </div>
+          <div class="stat-block">
+            <h3>按人员完成任务数</h3>
+            <div class="bar-chart" id="memberChart" aria-label="按人员完成任务数柱状图"></div>
+            <div class="legend" id="memberLegend"></div>
+          </div>
+        </div>
+      </section>
+
+      <p class="foot-note">数据保存在本地浏览器（localStorage），不会上传服务器。</p>
+    </main>
+
+    <!-- 任务编辑弹窗 -->
+    <div class="modal" id="taskModal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-mask" data-close></div>
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="taskModalTitle">新增任务</h3>
+          <button type="button" class="modal-close" data-close aria-label="关闭">×</button>
+        </div>
+        <form id="taskForm" class="modal-form">
+          <input type="hidden" id="taskId" />
+          <label class="field">
+            <span>任务名</span>
+            <input type="text" id="taskName" required placeholder="例如：需求调研" />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>负责人</span>
+              <select id="taskOwner"></select>
+            </label>
+            <label class="field">
+              <span>状态</span>
+              <select id="taskStatus">
+                <option value="todo">未开始</option>
+                <option value="doing">进行中</option>
+                <option value="done">已完成</option>
+              </select>
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>开始日期</span>
+              <input type="date" id="taskStart" />
+            </label>
+            <label class="field">
+              <span>结束日期</span>
+              <input type="date" id="taskEnd" />
+            </label>
+          </div>
+          <label class="field">
+            <span>进度 <b id="progressValue">0</b>%</span>
+            <input type="range" id="taskProgress" min="0" max="100" step="5" value="0" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary" data-close>取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 成员编辑弹窗 -->
+    <div class="modal" id="memberModal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-mask" data-close></div>
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="memberModalTitle">新增成员</h3>
+          <button type="button" class="modal-close" data-close aria-label="关闭">×</button>
+        </div>
+        <form id="memberForm" class="modal-form">
+          <input type="hidden" id="memberId" />
+          <label class="field">
+            <span>姓名</span>
+            <input type="text" id="memberName" required placeholder="例如：张伟" />
+          </label>
+          <label class="field">
+            <span>角色</span>
+            <input type="text" id="memberRole" required placeholder="例如：产品经理" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary" data-close>取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="./planning.js?v=20260618-planning"></script>
+  </body>
+</html>
