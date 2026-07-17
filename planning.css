@@ -509,6 +509,49 @@ p {
   background: #b9c6cf;
 }
 
+/* ---------- Overall progress ---------- */
+.overall-progress {
+  padding: 4px 2px 2px;
+}
+
+.overall-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.overall-progress-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--p-ink);
+}
+
+.overall-progress-pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--p-green);
+}
+
+.overall-progress-track {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  background: #e5edf1;
+  overflow: hidden;
+  border: 1px solid #d3e0e7;
+}
+
+.overall-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--p-blue), var(--p-green));
+  transition: width 0.3s ease;
+  min-width: 0;
+}
+
 .foot-note {
   margin-top: 24px;
   text-align: center;
