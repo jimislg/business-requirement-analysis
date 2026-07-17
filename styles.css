@@ -265,6 +265,27 @@ textarea:focus {
   justify-content: flex-end;
 }
 
+.gomoku-entry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  font-weight: 700;
+  border: 1px solid #cad6de;
+  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.gomoku-entry:hover {
+  background: #1a4a82;
+  border-color: #1a4a82;
+}
+
 .insight-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
