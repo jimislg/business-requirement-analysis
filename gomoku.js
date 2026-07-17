@@ -439,6 +439,14 @@
     for (var d = 0; d < candidates.length; d++) {
       if (candidates[d].defense >= 100000) return { x: candidates[d].x, y: candidates[d].y };
     }
+// 3) If AI can make a live four / four (next move wins) -> play it
+    for (var c2 = 0; c2 < candidates.length; c2++) {
+      if (candidates[c2].attack >= 10000) return { x: candidates[c2].x, y: candidates[c2].y };
+    }
+    // 4) If opponent could make a live four / four next -> block it
+    for (var d2 = 0; d2 < candidates.length; d2++) {
+      if (candidates[d2].defense >= 10000) return { x: candidates[d2].x, y: candidates[d2].y };
+    }
 
     return { x: best.x, y: best.y };
   }
