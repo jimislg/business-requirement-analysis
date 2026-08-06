@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CodeM - 飞书原生 AI 研发智能体</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232364aa'/%3E%3Cpath d='M22 20l-8 12 8 12M42 20l8 12-8 12M36 16L28 48' stroke='white' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./codem.css?v=20260806-codem-intro" />
+  </head>
+  <body>
+    <!-- 顶部导航 -->
+    <header class="codem-header">
+      <a href="./index.html" class="back-link" title="返回工作台">← 工作台</a>
+      <div class="codem-logo">
+        <div class="codem-logo-mark" aria-hidden="true">&lt;/&gt;</div>
+        <div class="codem-logo-text">CodeM<span>飞书原生 AI 研发智能体</span></div>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <span class="hero-kicker">AI Native Development</span>
+      <h1>懂研发，更懂<span class="gradient">团队交付</span></h1>
+      <p class="hero-sub">
+        CodeM 是飞书原生的 AI 研发智能体。把需求、缺陷、代码改动或交付上下文直接发给它，它负责拆解问题、执行任务并同步进展——从需求到上线，一站式闭环。
+      </p>
+      <div class="hero-actions">
+        <a href="#capabilities" class="btn-hero primary">了解核心能力</a>
+        <a href="./index.html" class="btn-hero secondary">返回工作台</a>
+      </div>
+    </section>
+
+    <!-- 核心能力 -->
+    <section class="section" id="capabilities">
+      <p class="section-eyebrow">Core Capabilities</p>
+      <h2 class="section-title">六大核心能力</h2>
+      <p class="section-desc">覆盖从需求理解到部署上线的研发全链路，让 AI 真正融入团队协作流。</p>
+      <div class="capability-grid">
+        <div class="capability-card">
+          <div class="cap-icon blue" aria-hidden="true">📋</div>
+          <h3>需求理解与拆解</h3>
+          <p>读取 Meego 需求设计方案，自动拆解为可执行的开发任务，理解上下文意图而非仅关键词匹配。</p>
+        </div>
+        <div class="capability-card">
+          <div class="cap-icon green" aria-hidden="true">🔧</div>
+          <h3>代码修复与生成</h3>
+          <p>定位根因、编写修复代码、运行测试验证。支持多语言多框架，改完即测，不交付半成品。</p>
+        </div>
+        <div class="capability-card">
+          <div class="cap-icon teal" aria-hidden="true">🔀</div>
+          <h3>MR 提交与合入</h3>
+          <p>自动创建分支、提交 MR、等待 CI 结果。合入前自验证，合入后流转工作项状态。</p>
+        </div>
+        <div class="capability-card">
+          <div class="cap-icon purple" aria-hidden="true">🚀</div>
+          <h3>部署上线</h3>
+          <p>合入后执行部署命令，以部署成功为完成条件。不假设成功，跑通才算交付。</p>
+        </div>
+        <div class="capability-card">
+          <div class="cap-icon yellow" aria-hidden="true">💬</div>
+          <h3>飞书原生协作</h3>
+          <p>直接在飞书 IM 对话中接收任务、反馈进展。打通聊天、文档、Meego 工作项，上下文不割裂。</p>
+        </div>
+        <div class="capability-card">
+          <div class="cap-icon red" aria-hidden="true">🎯</div>
+          <h3>闭环交付</h3>
+          <p>从需求到上线全流程无人值守。每一步有验证、有回执、有结构化交付报告。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 工作流程 -->
+    <section class="section">
+      <p class="section-eyebrow">How It Works</p>
+      <h2 class="section-title">四步闭环交付</h2>
+      <p class="section-desc">从一条飞书消息到部署上线，CodeM 自动驱动全流程。</p>
+      <div class="scenario-flow">
+        <div class="scenario-step">
+          <div class="step-num">1</div>
+          <h4>接收任务</h4>
+          <p>在飞书对话中发送需求或缺陷，CodeM 自动拉取 Meego 工作项与设计方案。</p>
+        </div>
+        <div class="scenario-step">
+          <div class="step-num">2</div>
+          <h4>分析执行</h4>
+          <p>定位代码仓库，分析根因或拆解需求，编写代码并运行测试验证。</p>
+        </div>
+        <div class="scenario-step">
+          <div class="step-num">3</div>
+          <h4>提 MR 合入</h4>
+          <p>创建分支提交 MR，等待 CI 通过后合入主干，全程自动流转。</p>
+        </div>
+        <div class="scenario-step">
+          <div class="step-num">4</div>
+          <h4>部署上线</h4>
+          <p>合入后执行部署，确认部署成功后流转工作项，输出交付报告。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 数据指标 -->
+    <section class="section">
+      <p class="section-eyebrow">By The Numbers</p>
+      <h2 class="section-title">研发效能提升</h2>
+      <p class="section-desc">AI 智能体介入后，团队交付效率与质量同步提升。</p>
+      <div class="metrics-strip">
+        <div class="metric-card">
+          <strong>10×</strong>
+          <span>需求交付提速</span>
+        </div>
+        <div class="metric-card">
+          <strong>24/7</strong>
+          <span>无人值守开发</span>
+        </div>
+        <div class="metric-card">
+          <strong>100%</strong>
+          <span>交付前自验证</span>
+        </div>
+        <div class="metric-card">
+          <strong>0</strong>
+          <span>上下文割裂</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 对比 -->
+    <section class="section">
+      <p class="section-eyebrow">Why CodeM</p>
+      <h2 class="section-title">传统方式 vs CodeM</h2>
+      <p class="section-desc">同样的需求，两种截然不同的交付路径。</p>
+      <div class="compare-table-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>环节</th>
+              <th>CodeM 智能体</th>
+              <th>传统人工流程</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>需求理解</td>
+              <td>自动读取设计方案，拆解任务</td>
+              <td>人工阅读文档，口头沟通对齐</td>
+            </tr>
+            <tr>
+              <td>编码实现</td>
+              <td>AI 定位根因并生成代码</td>
+              <td>手动查找代码，逐行修改</td>
+            </tr>
+            <tr>
+              <td>测试验证</td>
+              <td>自动运行测试，不通过即修复</td>
+              <td>手动跑测，遗漏常见</td>
+            </tr>
+            <tr>
+              <td>提交流转</td>
+              <td>自动建 MR、等 CI、合入</td>
+              <td>手动提 PR、催 Review、合入</td>
+            </tr>
+            <tr>
+              <td>部署上线</td>
+              <td>自动部署，以成功为完成条件</td>
+              <td>手动执行，出错需回滚</td>
+            </tr>
+            <tr>
+              <td>状态同步</td>
+              <td>自动流转 Meego 工作项</td>
+              <td>手动更新工单状态</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+      <div class="cta-card">
+        <h2>让 AI 成为你的研发搭档</h2>
+        <p>在飞书中直接对话 CodeM，把需求变成上线代码。</p>
+        <a href="./index.html" class="btn-hero primary">返回工作台体验</a>
+      </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="codem-footer">
+      <p>CodeM · 飞书原生 AI 研发智能体 · <a href="./index.html">业务需求分析工作台</a></p>
+    </footer>
+  </body>
+</html>
