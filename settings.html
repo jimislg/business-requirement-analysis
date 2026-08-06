@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>系统设置 - 用户与团队管理</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232364aa'/%3E%3Cpath d='M32 14a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-18 36c0-9.9 8.1-18 18-18s18 8.1 18 18' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./settings.css?v=20260806-settings" />
+  </head>
+  <body>
+    <main class="settings-shell">
+      <header class="settings-header">
+        <div class="settings-brand">
+          <a href="./index.html" class="back-link" title="返回工作台">← 工作台</a>
+          <h1>系统设置</h1>
+        </div>
+        <div class="settings-actions">
+          <button type="button" id="resetBtn" class="btn secondary" title="重置为演示样例">重置演示数据</button>
+        </div>
+      </header>
+
+      <!-- Tab 切换 -->
+      <nav class="tab-bar" role="tablist" aria-label="设置模块">
+        <button type="button" class="tab-item active" data-tab="users" role="tab">用户管理</button>
+        <button type="button" class="tab-item" data-tab="teams" role="tab">团队管理</button>
+        <button type="button" class="tab-item" data-tab="logs" role="tab">操作日志</button>
+      </nav>
+
+      <!-- ============ 用户管理 ============ -->
+      <section class="tab-panel" data-panel="users" aria-label="用户管理">
+        <section class="summary-strip" aria-label="用户概览">
+          <div class="summary-card">
+            <strong id="summaryUserTotal">0</strong>
+            <span>总用户数</span>
+          </div>
+          <div class="summary-card">
+            <strong id="summaryUserActive">0</strong>
+            <span>启用</span>
+          </div>
+          <div class="summary-card">
+            <strong id="summaryUserDisabled">0</strong>
+            <span>禁用</span>
+          </div>
+          <div class="summary-card">
+            <strong id="summaryUserAdmin">0</strong>
+            <span>管理员</span>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="用户列表">
+          <div class="panel-head">
+            <h2>用户列表</h2>
+            <div class="panel-tools">
+              <input id="userSearch" type="search" class="search-input" placeholder="搜索用户名 / 邮箱" />
+              <button type="button" id="addUserBtn" class="btn primary">+ 新增用户</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="task-table">
+              <thead>
+                <tr>
+                  <th>用户名</th>
+                  <th>邮箱</th>
+                  <th>角色</th>
+                  <th>所属团队</th>
+                  <th>状态</th>
+                  <th class="col-actions">操作</th>
+                </tr>
+              </thead>
+              <tbody id="userTbody"></tbody>
+            </table>
+          </div>
+          <p id="userEmpty" class="empty-row">暂无用户，点击「新增用户」开始。</p>
+        </section>
+      </section>
+
+      <!-- ============ 团队管理 ============ -->
+      <section class="tab-panel hidden" data-panel="teams" aria-label="团队管理">
+        <section class="summary-strip" aria-label="团队概览">
+          <div class="summary-card">
+            <strong id="summaryTeamTotal">0</strong>
+            <span>团队总数</span>
+          </div>
+          <div class="summary-card">
+            <strong id="summaryTeamMembers">0</strong>
+            <span>总成员数</span>
+          </div>
+          <div class="summary-card">
+            <strong id="summaryTeamAvg">0</strong>
+            <span>平均成员数</span>
+          </div>
+          <div class="summary-card">
+            <strong id="summaryTeamUnassigned">0</strong>
+            <span>未分配团队</span>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="团队列表">
+          <div class="panel-head">
+            <h2>团队列表</h2>
+            <div class="panel-tools">
+              <input id="teamSearch" type="search" class="search-input" placeholder="搜索团队名称" />
+              <button type="button" id="addTeamBtn" class="btn primary">+ 新增团队</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="task-table">
+              <thead>
+                <tr>
+                  <th>团队名称</th>
+                  <th>描述</th>
+                  <th>成员数</th>
+                  <th class="col-actions">操作</th>
+                </tr>
+              </thead>
+              <tbody id="teamTbody"></tbody>
+            </table>
+          </div>
+          <p id="teamEmpty" class="empty-row">暂无团队，点击「新增团队」开始。</p>
+        </section>
+      </section>
+
+      <!-- ============ 操作日志 ============ -->
+      <section class="tab-panel hidden" data-panel="logs" aria-label="操作日志">
+        <section class="panel" aria-label="操作日志">
+          <div class="panel-head">
+            <h2>操作日志</h2>
+            <div class="panel-tools">
+              <button type="button" id="clearLogBtn" class="btn danger" title="清空全部日志">清空日志</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="task-table">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>操作人</th>
+                  <th>操作类型</th>
+                  <th>操作对象</th>
+                  <th>详情</th>
+                </tr>
+              </thead>
+              <tbody id="logTbody"></tbody>
+            </table>
+          </div>
+          <p id="logEmpty" class="empty-row">暂无操作日志。</p>
+        </section>
+      </section>
+
+      <p class="foot-note">数据保存在本地浏览器（localStorage），不会上传服务器。</p>
+    </main>
+
+    <!-- 用户编辑弹窗 -->
+    <div class="modal" id="userModal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-mask" data-close></div>
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="userModalTitle">新增用户</h3>
+          <button type="button" class="modal-close" data-close aria-label="关闭">×</button>
+        </div>
+        <form id="userForm" class="modal-form" novalidate>
+          <input type="hidden" id="userId" />
+          <label class="field">
+            <span>用户名</span>
+            <input type="text" id="username" required placeholder="例如：张伟" />
+          </label>
+          <label class="field">
+            <span>邮箱</span>
+            <input type="email" id="email" required placeholder="例如：zhangwei@example.com" />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>角色</span>
+              <select id="role">
+                <option value="admin">管理员</option>
+                <option value="member" selected>普通成员</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>所属团队</span>
+              <select id="teamId"></select>
+            </label>
+          </div>
+          <label class="field">
+            <span>状态</span>
+            <select id="status">
+              <option value="active" selected>启用</option>
+              <option value="disabled">禁用</option>
+            </select>
+          </label>
+          <p id="userFormError" class="field-error"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary" data-close>取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 团队编辑弹窗 -->
+    <div class="modal" id="teamModal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-mask" data-close></div>
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="teamModalTitle">新增团队</h3>
+          <button type="button" class="modal-close" data-close aria-label="关闭">×</button>
+        </div>
+        <form id="teamForm" class="modal-form" novalidate>
+          <input type="hidden" id="teamEditId" />
+          <label class="field">
+            <span>团队名称</span>
+            <input type="text" id="teamName" required placeholder="例如：研发一组" />
+          </label>
+          <label class="field">
+            <span>描述</span>
+            <input type="text" id="teamDesc" placeholder="例如：负责前端与后端开发" />
+          </label>
+          <p id="teamFormError" class="field-error"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary" data-close>取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="./settings.js?v=20260806-settings"></script>
+  </body>
+</html>
