@@ -1,0 +1,17 @@
+{
+  "name": "business-requirement-analysis",
+  "version": "1.1.0",
+  "description": "业务需求分析工作台 - 含商机管理模块",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "deploy": "node server/deploy.js",
+    "dev": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

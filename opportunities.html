@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>商机管理 - 销售看板</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232364aa'/%3E%3Cpath d='M16 44l10-10 8 8 14-14v8h6V18H40v6h2L34 32l-8-8-12 12z' fill='white'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./opportunities.css?v=20260806-opp" />
+  </head>
+  <body>
+    <main class="opp-shell">
+      <header class="opp-header">
+        <div class="opp-brand">
+          <a href="./index.html" class="back-link" title="返回工作台">← 工作台</a>
+          <h1>商机管理</h1>
+        </div>
+        <div class="opp-actions">
+          <button type="button" id="resetBtn" class="btn secondary" title="重置为演示样例">重置演示数据</button>
+          <button type="button" id="addOppBtn" class="btn primary">+ 新增商机</button>
+        </div>
+      </header>
+
+      <!-- 销售预测概览 -->
+      <section class="forecast-strip" aria-label="销售预测概览">
+        <div class="forecast-card highlight">
+          <strong id="forecastTotal">¥0</strong>
+          <span>加权预测金额</span>
+        </div>
+        <div class="forecast-card">
+          <strong id="forecastTotalAmount">¥0</strong>
+          <span>商机总金额</span>
+        </div>
+        <div class="forecast-card">
+          <strong id="forecastCount">0</strong>
+          <span>商机总数</span>
+        </div>
+        <div class="forecast-card">
+          <strong id="forecastWinRate">0%</strong>
+          <span>预测成交率</span>
+        </div>
+      </section>
+
+      <!-- Tab 切换 -->
+      <nav class="tab-bar" role="tablist" aria-label="视图切换">
+        <button type="button" class="tab-item active" data-tab="board" role="tab">看板视图</button>
+        <button type="button" class="tab-item" data-tab="list" role="tab">列表视图</button>
+      </nav>
+
+      <!-- ============ 看板视图 ============ -->
+      <section class="tab-panel" data-panel="board" aria-label="看板视图">
+        <div class="kanban-board" id="kanbanBoard">
+          <!-- 列由 JS 动态生成 -->
+        </div>
+      </section>
+
+      <!-- ============ 列表视图 ============ -->
+      <section class="tab-panel hidden" data-panel="list" aria-label="列表视图">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>商机列表</h2>
+            <div class="panel-tools">
+              <select id="listStageFilter" class="filter-select">
+                <option value="">全部阶段</option>
+              </select>
+              <input id="listSearch" type="search" class="search-input" placeholder="搜索商机名 / 客户 / 负责人" />
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="task-table">
+              <thead>
+                <tr>
+                  <th>商机名称</th>
+                  <th>客户</th>
+                  <th>金额</th>
+                  <th>阶段</th>
+                  <th>负责人</th>
+                  <th>预计成交</th>
+                  <th class="col-actions">操作</th>
+                </tr>
+              </thead>
+              <tbody id="oppTbody"></tbody>
+            </table>
+          </div>
+          <p id="oppEmpty" class="empty-row">暂无商机，点击「新增商机」开始。</p>
+        </div>
+      </section>
+
+      <p class="foot-note">数据通过后端 API 持久化；后端不可达时自动降级到本地浏览器存储。</p>
+    </main>
+
+    <!-- 商机编辑弹窗 -->
+    <div class="modal" id="oppModal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-mask" data-close></div>
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="oppModalTitle">新增商机</h3>
+          <button type="button" class="modal-close" data-close aria-label="关闭">×</button>
+        </div>
+        <form id="oppForm" class="modal-form" novalidate>
+          <input type="hidden" id="oppId" />
+          <label class="field">
+            <span>商机名称</span>
+            <input type="text" id="oppName" required placeholder="例如：华东制造 ERP 升级" />
+          </label>
+          <label class="field">
+            <span>客户名称</span>
+            <input type="text" id="oppCustomer" required placeholder="例如：华东制造集团" />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>金额（元）</span>
+              <input type="number" id="oppAmount" required min="0" step="1000" placeholder="500000" />
+            </label>
+            <label class="field">
+              <span>负责人</span>
+              <input type="text" id="oppOwner" placeholder="例如：张伟" />
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>阶段</span>
+              <select id="oppStage"></select>
+            </label>
+            <label class="field">
+              <span>预计成交日期</span>
+              <input type="date" id="oppCloseDate" />
+            </label>
+          </div>
+          <p id="oppFormError" class="field-error"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary" data-close>取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 商机详情弹窗 -->
+    <div class="modal" id="detailModal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-mask" data-close></div>
+      <div class="modal-card detail-card">
+        <div class="modal-head">
+          <h3 id="detailTitle">商机详情</h3>
+          <button type="button" class="modal-close" data-close aria-label="关闭">×</button>
+        </div>
+        <div class="detail-body" id="detailBody">
+          <!-- 由 JS 动态填充 -->
+        </div>
+      </div>
+    </div>
+
+    <script src="./opportunities.js?v=20260806-opp"></script>
+  </body>
+</html>

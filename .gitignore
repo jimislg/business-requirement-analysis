@@ -2,3 +2,5 @@
 .localtunnel.*
 .ngrok.*
 *.zip
+node_modules/
+server/data.json
