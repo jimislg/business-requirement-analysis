@@ -336,17 +336,39 @@
       return;
     }
 
-    var max = Math.max.apply(null, data.map(function (d) { return d.total; }).concat(1));
-    data.forEach(function (d) {
-      var heightPct = Math.round((d.total / max) * 100);
-      chart.appendChild(el("div", { className: "bar" }, [
+    // 柱高基准=已完成任务数(d.done)，与「完成统计」语义一致；数值仍显示「已完成/总数」
+    var max = Math.max.apply(null, data.map(function (d) { return d.done; }).concat(1));
+      data.forEach(function (d) {
+      var heightPct = Math.round((d.done / max) * 100);
+        chart.appendChild(el("div", { className: "bar" }, [
         el("span", { className: "bar-val" }, d.done + "/" + d.total),
         el("i", { style: "height:" + Math.max(heightPct, 4) + "%;background:var(--p-blue)" }),
-        el("span", { className: "bar-label" }, d.name)
-      ]));
-    });
+      el("span", { className: "bar-label" }, d.name)
+    ]));
+});
 
-    legend.appendChild(el("span", {}, "柱高=负责任务总数，数值=已完成/总数"));
+    legend.appendChild(el("span", {}, "柱高=已完成任务数，数值=已完成/总数"));
+  }
+
+  /* ============ 渲染：整体完成率 ============ */
+    function renderOverallProgress() {
+    var block = $("#overallProgressBlock");
+    if (!block) return;
+    block.innerHTML = "";
+
+  var total = state.tasks.length;
+    var done = state.tasks.filter(function (t) { return t.status === "done"; }).length;
+    var pct = total ? Math.round((done / total) * 100) : 0;
+
+    block.appendChild(el("div", { className: "overall-progress" }, [
+      el("div", { className: "overall-progress-head" }, [
+        el("span", { className: "overall-progress-label" }, "总体完成率"),
+        el("span", { className: "overall-progress-pct" }, done + "/" + total + " · " + pct + "%")
+      ]),
+      el("div", { className: "overall-progress-track", role: "progressbar", "aria-valuenow": String(pct), "aria-valuemin": "0", "aria-valuemax": "100" }, [
+        el("span", { className: "overall-progress-fill", style: "width:" + pct + "%" })
+      ])
+    ]));
   }
 
   function renderAll() {
@@ -355,6 +377,7 @@
     renderMembers();
     renderStatusChart();
     renderMemberChart();
+    renderOverallProgress();
   }
 
   /* ============ 任务弹窗 ============ */
